@@ -1,0 +1,59 @@
+{
+  "name": "patchlevel/worker",
+  "type": "library",
+  "license": "MIT",
+  "description": "Worker",
+  "keywords": [
+    "console",
+    "worker"
+  ],
+  "homepage": "https://github.com/patchlevel/worker",
+  "authors": [
+    {
+      "name": "Daniel Badura",
+      "email": "daniel.badura@patchlevel.de"
+    },
+    {
+      "name": "David Badura",
+      "email": "david.badura@patchlevel.de"
+    }
+  ],
+  "require": {
+    "php": "~8.1.0 || ~8.2.0",
+    "symfony/event-dispatcher": "^5.4.0|^6.0.1"
+  },
+  "require-dev": {
+    "cspray/phinal": "^2.0",
+    "infection/infection": "^0.26.13",
+    "patchlevel/coding-standard": "^1.2.0",
+    "phpbench/phpbench": "^1.2.6",
+    "phpspec/prophecy-phpunit": "^2.0.1",
+    "phpstan/phpstan": "^1.8.2",
+    "phpunit/phpunit": "^9.5.23",
+    "psalm/plugin-phpunit": "^0.18.0",
+    "roave/infection-static-analysis-plugin": "^1.22.0",
+    "symfony/var-dumper": "^5.4.1|^6.0.1",
+    "vimeo/psalm": "^5.6.0"
+  },
+  "config": {
+    "preferred-install": {
+      "*": "dist"
+    },
+    "sort-packages": true,
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true,
+      "infection/extension-installer": true,
+      "composer/package-versions-deprecated": true
+    }
+  },
+  "autoload": {
+    "psr-4": {
+      "Patchlevel\\Worker\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Patchlevel\\Worker\\Tests\\": "tests/"
+    }
+  }
+}
