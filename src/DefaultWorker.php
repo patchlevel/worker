@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace Patchlevel\Worker;
 
 use Closure;
+use Patchlevel\Worker\Event\WorkerRunningEvent;
+use Patchlevel\Worker\Event\WorkerStartedEvent;
+use Patchlevel\Worker\Event\WorkerStoppedEvent;
 use Patchlevel\Worker\Listener\StopWorkerOnIterationLimitListener;
 use Patchlevel\Worker\Listener\StopWorkerOnMemoryLimitListener;
 use Patchlevel\Worker\Listener\StopWorkerOnSigtermSignalListener;
 use Patchlevel\Worker\Listener\StopWorkerOnTimeLimitListener;
-use Patchlevel\Worker\Event\WorkerRunningEvent;
-use Patchlevel\Worker\Event\WorkerStartedEvent;
-use Patchlevel\Worker\Event\WorkerStoppedEvent;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\EventDispatcher\EventDispatcher;
@@ -26,11 +26,10 @@ final class DefaultWorker implements Worker
     private bool $shouldStop = false;
 
     public function __construct(
-        private readonly Closure                  $job,
+        private readonly Closure $job,
         private readonly EventDispatcherInterface $eventDispatcher,
-        private readonly ?LoggerInterface         $logger = null
-    )
-    {
+        private readonly LoggerInterface|null $logger = null,
+    ) {
     }
 
     public function run(int $sleepTimer = 1000): void
@@ -79,36 +78,37 @@ final class DefaultWorker implements Worker
         $this->shouldStop = true;
     }
 
-    /**
-     * @param array{runLimit?: null|positive-int, memoryLimit?: null|string, timeLimit?: null|positive-int} $options
-     */
+    /** @param array{runLimit?: (positive-int|null), memoryLimit?: (string|null), timeLimit?: (positive-int|null)} $options */
     public function create(
-        Closure         $job,
-        array           $options,
-        LoggerInterface $logger = new NullLogger()
-    ): self
-    {
+        Closure $job,
+        array $options,
+        LoggerInterface $logger = new NullLogger(),
+    ): self {
         $eventDispatcher = new EventDispatcher();
         $eventDispatcher->addSubscriber(new StopWorkerOnSigtermSignalListener($logger));
 
         if ($options['runLimit'] ?? null) {
-            $eventDispatcher->addSubscriber(new StopWorkerOnIterationLimitListener($options['runLimit'], $logger));
+            $eventDispatcher->addSubscriber(
+                new StopWorkerOnIterationLimitListener($options['runLimit'], $logger),
+            );
         }
 
         if ($options['memoryLimit'] ?? null) {
             $eventDispatcher->addSubscriber(
-                new StopWorkerOnMemoryLimitListener(Bytes::parseFromString($options['memoryLimit']), $logger))
-            ;
+                new StopWorkerOnMemoryLimitListener(Bytes::parseFromString($options['memoryLimit']), $logger),
+            );
         }
 
         if ($options['timeLimit'] ?? null) {
-            $eventDispatcher->addSubscriber(new StopWorkerOnTimeLimitListener($options['timeLimit'], $logger));
+            $eventDispatcher->addSubscriber(
+                new StopWorkerOnTimeLimitListener($options['timeLimit'], $logger),
+            );
         }
 
         return new self(
             $job,
             $eventDispatcher,
-            $logger
+            $logger,
         );
     }
 }

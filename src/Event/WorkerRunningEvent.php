@@ -9,7 +9,7 @@ use Patchlevel\Worker\Worker;
 final class WorkerRunningEvent
 {
     public function __construct(
-        public readonly Worker $worker
+        public readonly Worker $worker,
     ) {
     }
 }

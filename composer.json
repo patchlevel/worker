@@ -24,16 +24,16 @@
   },
   "require-dev": {
     "cspray/phinal": "^2.0",
-    "infection/infection": "^0.26.13",
+    "infection/infection": "^0.26.19",
     "patchlevel/coding-standard": "^1.2.0",
-    "phpbench/phpbench": "^1.2.6",
+    "phpbench/phpbench": "^1.2.8",
     "phpspec/prophecy-phpunit": "^2.0.1",
-    "phpstan/phpstan": "^1.8.2",
-    "phpunit/phpunit": "^9.5.23",
-    "psalm/plugin-phpunit": "^0.18.0",
-    "roave/infection-static-analysis-plugin": "^1.22.0",
+    "phpstan/phpstan": "^1.10.3",
+    "phpunit/phpunit": "^9.6.4",
+    "psalm/plugin-phpunit": "^0.18.4",
+    "roave/infection-static-analysis-plugin": "^1.29.0",
     "symfony/var-dumper": "^5.4.1|^6.0.1",
-    "vimeo/psalm": "^5.6.0"
+    "vimeo/psalm": "^5.7.7"
   },
   "config": {
     "preferred-install": {
