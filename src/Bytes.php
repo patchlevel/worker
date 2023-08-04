@@ -42,4 +42,20 @@ final class Bytes
 
         return new self($number * self::SIZES[$unit]);
     }
+
+    public function formatted(): string {
+        if ($this->bytes >= 1024 * 1024 * 1024) {
+            return sprintf('%.1f GiB', $this->bytes / 1024 / 1024 / 1024);
+        }
+
+        if ($this->bytes >= 1024 * 1024) {
+            return sprintf('%.1f MiB', $this->bytes / 1024 / 1024);
+        }
+
+        if ($this->bytes >= 1024) {
+            return sprintf('%d KiB', $this->bytes / 1024);
+        }
+
+        return sprintf('%d B', $this->bytes);
+    }
 }

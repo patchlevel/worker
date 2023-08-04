@@ -79,7 +79,7 @@ final class DefaultWorker implements Worker
     }
 
     /** @param array{runLimit?: (positive-int|null), memoryLimit?: (string|null), timeLimit?: (positive-int|null)} $options */
-    public function create(
+    public static function create(
         Closure $job,
         array $options,
         LoggerInterface $logger = new NullLogger(),
