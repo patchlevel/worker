@@ -20,7 +20,7 @@
   ],
   "require": {
     "php": "~8.1.0 || ~8.2.0",
-    "symfony/event-dispatcher": "^5.4.0|^6.0.1"
+    "symfony/event-dispatcher": "^5.4.0|^6.0.1 || 7.0.0"
   },
   "require-dev": {
     "cspray/phinal": "^2.0",
@@ -32,7 +32,7 @@
     "phpunit/phpunit": "^9.6.4",
     "psalm/plugin-phpunit": "^0.18.4",
     "roave/infection-static-analysis-plugin": "^1.29.0",
-    "symfony/var-dumper": "^5.4.1|^6.0.1",
+    "symfony/var-dumper": "7.0.0",
     "vimeo/psalm": "^5.7.7"
   },
   "config": {
