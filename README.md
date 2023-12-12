@@ -5,7 +5,7 @@
 
 # Worker
 
-With this library you can hydrate objects from array into objects and back again.
+Gives the opportunity to build a stable worker that terminates properly when limits are exceeded.
 It has now been outsourced by the [event-sourcing](https://github.com/patchlevel/event-sourcing) library as a separate library.
 
 ## Installation
