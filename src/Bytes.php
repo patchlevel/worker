@@ -6,6 +6,7 @@ namespace Patchlevel\Worker;
 
 use function array_key_exists;
 use function preg_match;
+use function sprintf;
 use function strtoupper;
 
 final class Bytes
@@ -43,7 +44,8 @@ final class Bytes
         return new self($number * self::SIZES[$unit]);
     }
 
-    public function formatted(): string {
+    public function formatted(): string
+    {
         if ($this->bytes >= 1024 * 1024 * 1024) {
             return sprintf('%.1f GiB', $this->bytes / 1024 / 1024 / 1024);
         }
