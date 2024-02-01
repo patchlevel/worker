@@ -96,7 +96,7 @@ final class DefaultWorker implements Worker
             );
         }
 
-        if ($options['memoryLimit'] ?? null) {
+        if ($options['memoryLimit'] !== null) {
             $eventDispatcher->addSubscriber(
                 new StopWorkerOnMemoryLimitListener(Bytes::parseFromString($options['memoryLimit']), $logger),
             );
