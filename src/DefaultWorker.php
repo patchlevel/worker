@@ -19,6 +19,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 use function max;
 use function microtime;
+use function round;
 use function usleep;
 
 final class DefaultWorker implements Worker
@@ -32,6 +33,7 @@ final class DefaultWorker implements Worker
     ) {
     }
 
+    /** @param int $sleepTimer in milliseconds */
     public function run(int $sleepTimer = 1000): void
     {
         $this->logger?->debug('Worker starting');
@@ -41,11 +43,12 @@ final class DefaultWorker implements Worker
         while (!$this->shouldStop) {
             $this->logger?->debug('Worker starting job run');
 
-            $startTime = microtime(true);
+            $startTime = (int)round(microtime(true) * 1000);
 
             ($this->job)();
 
-            $ranTime = (int)(microtime(true) - $startTime);
+            $endTime = (int)round(microtime(true) * 1000);
+            $ranTime = $endTime - $startTime;
 
             $this->logger?->debug('Worker finished job run ({ranTime}ms)', ['ranTime' => $ranTime]);
 
