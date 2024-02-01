@@ -36,7 +36,7 @@ final class StopWorkerOnTimeLimitListenerTest extends TestCase
         $listener = new StopWorkerOnTimeLimitListener(1);
         $listener->onWorkerStarted();
 
-        sleep(1);
+        sleep(2);
 
         $listener->onWorkerRunning(new WorkerRunningEvent($worker));
     }
