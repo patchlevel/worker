@@ -50,7 +50,7 @@ final class WorkerCommand extends Command
                 'memory-limit',
                 null,
                 InputOption::VALUE_REQUIRED,
-                'How much memory consumption should the worker be terminated'
+                'How much memory consumption should the worker be terminated (500MB, 1GB, etc.)'
             )
             ->addOption(
                 'time-limit',
@@ -62,7 +62,7 @@ final class WorkerCommand extends Command
                 'sleep',
                 null,
                 InputOption::VALUE_REQUIRED,
-                'How much time should elapse before the next job is executed in microseconds',
+                'How much time should elapse before the next job is executed in milliseconds',
                 1000
             );
     }
