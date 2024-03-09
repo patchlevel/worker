@@ -1,15 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <files psalm-version="5.21.1@8c473e2437be8b6a8fd8f630f0f11a16b114c494">
   <file src="src/DefaultWorker.php">
-    <PossiblyNullArgument>
-      <code><![CDATA[$options['runLimit']]]></code>
-      <code><![CDATA[$options['timeLimit']]]></code>
-    </PossiblyNullArgument>
-    <PossiblyUndefinedArrayOffset>
-      <code><![CDATA[$options['memoryLimit']]]></code>
-      <code><![CDATA[$options['runLimit']]]></code>
-      <code><![CDATA[$options['timeLimit']]]></code>
-    </PossiblyUndefinedArrayOffset>
     <TypeDoesNotContainType>
       <code><![CDATA[$this->shouldStop]]></code>
       <code><![CDATA[$this->shouldStop]]></code>
