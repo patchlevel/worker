@@ -72,8 +72,12 @@ final class WorkerCommand extends Command
         $logger = new ConsoleLogger($output);
         
         $worker = DefaultWorker::create(
-            function (): void {
+            function ($stop): void {
                 // do something
+                
+                if (/* some condition */) {
+                    $stop();
+                }
             },
             [
                 'runLimit' => $input->getOption('run-limit'),

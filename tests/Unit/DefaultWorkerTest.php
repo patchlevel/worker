@@ -43,4 +43,30 @@ final class DefaultWorkerTest extends TestCase
         $worker = new DefaultWorker(static fn () => null, $evenDispatcher->reveal(), $logger->reveal());
         $worker->run(200);
     }
+
+    public function testJobStopWorker(): void
+    {
+        $evenDispatcher = $this->prophesize(EventDispatcherInterface::class);
+        $evenDispatcher->dispatch(Argument::type(WorkerStartedEvent::class))->shouldBeCalledTimes(1);
+        $evenDispatcher->dispatch(Argument::type(WorkerRunningEvent::class))->shouldBeCalledTimes(1);
+        $evenDispatcher->dispatch(Argument::type(WorkerStoppedEvent::class))->shouldBeCalledTimes(1);
+
+        $logger = $this->prophesize(LoggerInterface::class);
+        $logger->debug('Worker starting')->shouldBeCalledTimes(1);
+        $logger->debug('Worker starting job run')->shouldBeCalledTimes(1);
+        $logger->debug('Worker finished job run ({ranTime}ms)', Argument::any())->shouldBeCalledTimes(1);
+        $logger->debug('Worker received stop signal')->shouldBeCalledTimes(1);
+        $logger->debug('Worker stopped')->shouldBeCalledTimes(1);
+        $logger->debug('Worker terminated')->shouldBeCalledTimes(1);
+
+        $worker = new DefaultWorker(
+            static function ($stop): void {
+                $stop();
+            },
+            $evenDispatcher->reveal(),
+            $logger->reveal(),
+        );
+
+        $worker->run(0);
+    }
 }

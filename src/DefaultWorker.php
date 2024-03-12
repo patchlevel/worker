@@ -26,6 +26,7 @@ final class DefaultWorker implements Worker
 {
     private bool $shouldStop = false;
 
+    /** @param Closure(Closure):void $job */
     public function __construct(
         private readonly Closure $job,
         private readonly EventDispatcherInterface $eventDispatcher,
@@ -33,7 +34,7 @@ final class DefaultWorker implements Worker
     ) {
     }
 
-    /** @param int $sleepTimer in milliseconds */
+    /** @param positive-int|0 $sleepTimer in milliseconds */
     public function run(int $sleepTimer = 1000): void
     {
         $this->logger?->debug('Worker starting');
@@ -45,7 +46,7 @@ final class DefaultWorker implements Worker
 
             $startTime = (int)round(microtime(true) * 1000);
 
-            ($this->job)();
+            ($this->job)($this->stop(...));
 
             $endTime = (int)round(microtime(true) * 1000);
             $ranTime = $endTime - $startTime;
@@ -81,28 +82,31 @@ final class DefaultWorker implements Worker
         $this->shouldStop = true;
     }
 
-    /** @param array{runLimit?: (positive-int|null), memoryLimit?: (string|null), timeLimit?: (positive-int|null)} $options */
+    /**
+     * @param Closure(Closure):void                                                                               $job
+     * @param array{runLimit?: (positive-int|null), memoryLimit?: (string|null), timeLimit?: (positive-int|null)} $options
+     */
     public static function create(
         Closure $job,
-        array $options,
+        array $options = [],
         LoggerInterface $logger = new NullLogger(),
     ): self {
         $eventDispatcher = new EventDispatcher();
         $eventDispatcher->addSubscriber(new StopWorkerOnSigtermSignalListener($logger));
 
-        if ($options['runLimit'] ?? null) {
+        if (isset($options['runLimit'])) {
             $eventDispatcher->addSubscriber(
                 new StopWorkerOnIterationLimitListener($options['runLimit'], $logger),
             );
         }
 
-        if ($options['memoryLimit'] !== null) {
+        if (isset($options['memoryLimit'])) {
             $eventDispatcher->addSubscriber(
                 new StopWorkerOnMemoryLimitListener(Bytes::parseFromString($options['memoryLimit']), $logger),
             );
         }
 
-        if ($options['timeLimit'] ?? null) {
+        if (isset($options['timeLimit'])) {
             $eventDispatcher->addSubscriber(
                 new StopWorkerOnTimeLimitListener($options['timeLimit'], $logger),
             );
