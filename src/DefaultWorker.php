@@ -16,6 +16,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 use function max;
 use function microtime;
@@ -83,8 +84,8 @@ final class DefaultWorker implements Worker
     }
 
     /**
-     * @param Closure(Closure):void                                                                               $job
-     * @param array{runLimit?: (positive-int|null), memoryLimit?: (string|null), timeLimit?: (positive-int|null)} $options
+     * @param Closure(Closure):void                                                                                                                             $job
+     * @param array{runLimit?: (positive-int|null), memoryLimit?: (string|null), timeLimit?: (positive-int|null), subscribers?: list<EventSubscriberInterface>} $options
      */
     public static function create(
         Closure $job,
@@ -110,6 +111,12 @@ final class DefaultWorker implements Worker
             $eventDispatcher->addSubscriber(
                 new StopWorkerOnTimeLimitListener($options['timeLimit'], $logger),
             );
+        }
+
+        if (isset($options['subscribers'])) {
+            foreach ($options['subscribers'] as $subscriber) {
+                $eventDispatcher->addSubscriber($subscriber);
+            }
         }
 
         return new self(
