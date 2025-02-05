@@ -90,7 +90,7 @@ final class DefaultWorker implements Worker
         Closure $job,
         array $options = [],
         LoggerInterface $logger = new NullLogger(),
-        EventDispatcherInterface|null $eventDispatcher,
+        EventDispatcherInterface|null $eventDispatcher = null,
     ): self {
         if ($eventDispatcher === null) {
             $eventDispatcher = new EventDispatcher();
