@@ -90,8 +90,12 @@ final class DefaultWorker implements Worker
         Closure $job,
         array $options = [],
         LoggerInterface $logger = new NullLogger(),
+        EventDispatcherInterface|null $eventDispatcher = null,
     ): self {
-        $eventDispatcher = new EventDispatcher();
+        if ($eventDispatcher === null) {
+            $eventDispatcher = new EventDispatcher();
+        }
+
         $eventDispatcher->addSubscriber(new StopWorkerOnSigtermSignalListener($logger));
 
         if (isset($options['runLimit'])) {

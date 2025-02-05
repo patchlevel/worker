@@ -12,6 +12,7 @@ use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 final class DefaultWorkerTest extends TestCase
@@ -20,9 +21,9 @@ final class DefaultWorkerTest extends TestCase
 
     public function testRunWorker(): void
     {
-        $evenDispatcher = $this->prophesize(EventDispatcherInterface::class);
-        $evenDispatcher->dispatch(Argument::type(WorkerStartedEvent::class))->shouldBeCalledTimes(1);
-        $evenDispatcher->dispatch(Argument::type(WorkerRunningEvent::class))->shouldBeCalledTimes(1)->will(
+        $eventDispatcher = $this->prophesize(EventDispatcherInterface::class);
+        $eventDispatcher->dispatch(Argument::type(WorkerStartedEvent::class))->shouldBeCalledTimes(1);
+        $eventDispatcher->dispatch(Argument::type(WorkerRunningEvent::class))->shouldBeCalledTimes(1)->will(
             /** @param array{WorkerRunningEvent} $args */
             static function (array $args) {
                 $args[0]->worker->stop();
@@ -30,7 +31,7 @@ final class DefaultWorkerTest extends TestCase
                 return $args[0];
             },
         );
-        $evenDispatcher->dispatch(Argument::type(WorkerStoppedEvent::class))->shouldBeCalledTimes(1);
+        $eventDispatcher->dispatch(Argument::type(WorkerStoppedEvent::class))->shouldBeCalledTimes(1);
 
         $logger = $this->prophesize(LoggerInterface::class);
         $logger->debug('Worker starting')->shouldBeCalledTimes(1);
@@ -40,16 +41,16 @@ final class DefaultWorkerTest extends TestCase
         $logger->debug('Worker stopped')->shouldBeCalledTimes(1);
         $logger->debug('Worker terminated')->shouldBeCalledTimes(1);
 
-        $worker = new DefaultWorker(static fn () => null, $evenDispatcher->reveal(), $logger->reveal());
+        $worker = new DefaultWorker(static fn () => null, $eventDispatcher->reveal(), $logger->reveal());
         $worker->run(200);
     }
 
     public function testJobStopWorker(): void
     {
-        $evenDispatcher = $this->prophesize(EventDispatcherInterface::class);
-        $evenDispatcher->dispatch(Argument::type(WorkerStartedEvent::class))->shouldBeCalledTimes(1);
-        $evenDispatcher->dispatch(Argument::type(WorkerRunningEvent::class))->shouldBeCalledTimes(1);
-        $evenDispatcher->dispatch(Argument::type(WorkerStoppedEvent::class))->shouldBeCalledTimes(1);
+        $eventDispatcher = $this->prophesize(EventDispatcherInterface::class);
+        $eventDispatcher->dispatch(Argument::type(WorkerStartedEvent::class))->shouldBeCalledTimes(1);
+        $eventDispatcher->dispatch(Argument::type(WorkerRunningEvent::class))->shouldBeCalledTimes(1);
+        $eventDispatcher->dispatch(Argument::type(WorkerStoppedEvent::class))->shouldBeCalledTimes(1);
 
         $logger = $this->prophesize(LoggerInterface::class);
         $logger->debug('Worker starting')->shouldBeCalledTimes(1);
@@ -63,10 +64,39 @@ final class DefaultWorkerTest extends TestCase
             static function ($stop): void {
                 $stop();
             },
-            $evenDispatcher->reveal(),
+            $eventDispatcher->reveal(),
             $logger->reveal(),
         );
 
         $worker->run(0);
+    }
+
+    public function testCustomEventDispatcher(): void
+    {
+        $listener = new class {
+            public int $called = 0;
+
+            public function __invoke(WorkerStartedEvent $event): void
+            {
+                $this->called++;
+            }
+        };
+
+        $eventDispatcher = new EventDispatcher();
+        $eventDispatcher->addListener(WorkerStartedEvent::class, $listener);
+
+        $logger = $this->prophesize(LoggerInterface::class);
+        $worker = DefaultWorker::create(
+            static function ($stop): void {
+                $stop();
+            },
+            [],
+            $logger->reveal(),
+            $eventDispatcher,
+        );
+
+        $worker->run(0);
+
+        self::assertEquals(1, $listener->called);
     }
 }
