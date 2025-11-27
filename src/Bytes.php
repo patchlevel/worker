@@ -18,6 +18,8 @@ final class Bytes
         'GB' => 1_073_741_824,
     ];
 
+    private const UNIT_THRESHOLD = 1_024;
+
     public function __construct(
         private readonly int $bytes,
     ) {
@@ -46,16 +48,16 @@ final class Bytes
 
     public function formatted(): string
     {
-        if ($this->bytes >= 1024 * 1024 * 1024) {
-            return sprintf('%.1f GiB', $this->bytes / 1024 / 1024 / 1024);
+        if ($this->bytes >= self::UNIT_THRESHOLD * self::UNIT_THRESHOLD * self::UNIT_THRESHOLD) {
+            return sprintf('%.1f GiB', $this->bytes / self::UNIT_THRESHOLD / self::UNIT_THRESHOLD / self::UNIT_THRESHOLD);
         }
 
-        if ($this->bytes >= 1024 * 1024) {
-            return sprintf('%.1f MiB', $this->bytes / 1024 / 1024);
+        if ($this->bytes >= self::UNIT_THRESHOLD * self::UNIT_THRESHOLD) {
+            return sprintf('%.1f MiB', $this->bytes / self::UNIT_THRESHOLD / self::UNIT_THRESHOLD);
         }
 
-        if ($this->bytes >= 1024) {
-            return sprintf('%d KiB', $this->bytes / 1024);
+        if ($this->bytes >= self::UNIT_THRESHOLD) {
+            return sprintf('%.1f KiB', $this->bytes / self::UNIT_THRESHOLD);
         }
 
         return sprintf('%d B', $this->bytes);

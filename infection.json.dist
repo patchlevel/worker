@@ -4,16 +4,19 @@
       "src"
     ]
   },
+  "staticAnalysisTool": "phpstan",
+  "staticAnalysisToolOptions": "--memory-limit=-1",
   "logs": {
     "text": "infection.log",
+    "html": "infection.html",
     "stryker": {
-      "report": "1.0.x"
+      "report": "/[0-9]+.[0-9]+.x/"
     }
   },
   "mutators": {
     "@default": true
   },
-  "minMsi": 39,
-  "minCoveredMsi": 80,
+  "minMsi": 82,
+  "minCoveredMsi": 82,
   "testFrameworkOptions": "--testsuite=unit"
 }

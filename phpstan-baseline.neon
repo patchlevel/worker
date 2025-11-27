@@ -1,6 +1,2 @@
 parameters:
 	ignoreErrors:
-		-
-			message: "#^If condition is always false\\.$#"
-			count: 1
-			path: src/DefaultWorker.php

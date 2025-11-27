@@ -24,14 +24,15 @@ jobs:
                     - "8.2"
                     - "8.3"
                     - "8.4"
+                    - "8.5"
                 operating-system:
                     - "ubuntu-latest"
                 include:
                     - dependencies: "locked"
-                      php-version: "8.4"
+                      php-version: "8.5"
                       operating-system: "ubuntu-latest"
                     - dependencies: "locked"
-                      php-version: "8.4"
+                      php-version: "8.5"
                       operating-system: "windows-latest"
 
         steps:
@@ -44,11 +45,10 @@ jobs:
                   coverage: "pcov"
                   php-version: "${{ matrix.php-version }}"
                   ini-values: memory_limit=-1
-                  extensions: pdo_sqlite
 
             - uses: ramsey/composer-install@3.1.1
               with:
                 dependency-versions: ${{ matrix.dependencies }}
 
             - name: "Tests"
-              run: "vendor/bin/phpunit --testsuite=unit --coverage-clover=clover.xml --coverage-text"
+              run: "vendor/bin/phpunit --testsuite=unit"
