@@ -8,67 +8,125 @@ use Patchlevel\Worker\DefaultWorker;
 use Patchlevel\Worker\Event\WorkerRunningEvent;
 use Patchlevel\Worker\Event\WorkerStartedEvent;
 use Patchlevel\Worker\Event\WorkerStoppedEvent;
+use Patchlevel\Worker\Tests\DummyLogger;
 use PHPUnit\Framework\TestCase;
-use Prophecy\Argument;
-use Prophecy\PhpUnit\ProphecyTrait;
-use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
+use function array_column;
+
 final class DefaultWorkerTest extends TestCase
 {
-    use ProphecyTrait;
-
     public function testRunWorker(): void
     {
-        $eventDispatcher = $this->prophesize(EventDispatcherInterface::class);
-        $eventDispatcher->dispatch(Argument::type(WorkerStartedEvent::class))->shouldBeCalledTimes(1);
-        $eventDispatcher->dispatch(Argument::type(WorkerRunningEvent::class))->shouldBeCalledTimes(1)->will(
-            /** @param array{WorkerRunningEvent} $args */
-            static function (array $args) {
-                $args[0]->worker->stop();
+        $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
 
-                return $args[0];
-            },
+        $seenEvents = [];
+
+        $eventDispatcher
+            ->expects(self::exactly(3))
+            ->method('dispatch')
+            ->willReturnCallback(
+                static function (object $event) use (&$seenEvents): object {
+                    $seenEvents[] = $event::class;
+
+                    if ($event instanceof WorkerRunningEvent) {
+                        $event->worker->stop();
+                    }
+
+                    return $event;
+                },
+            );
+
+        $logger = new DummyLogger();
+
+        $worker = new DefaultWorker(
+            static fn () => null,
+            $eventDispatcher,
+            $logger,
         );
-        $eventDispatcher->dispatch(Argument::type(WorkerStoppedEvent::class))->shouldBeCalledTimes(1);
 
-        $logger = $this->prophesize(LoggerInterface::class);
-        $logger->debug('Worker starting')->shouldBeCalledTimes(1);
-        $logger->debug('Worker starting job run')->shouldBeCalledTimes(1);
-        $logger->debug('Worker finished job run ({ranTime}ms)', Argument::any())->shouldBeCalledTimes(1);
-        $logger->debug('Worker received stop signal')->shouldBeCalledTimes(1);
-        $logger->debug('Worker stopped')->shouldBeCalledTimes(1);
-        $logger->debug('Worker terminated')->shouldBeCalledTimes(1);
-
-        $worker = new DefaultWorker(static fn () => null, $eventDispatcher->reveal(), $logger->reveal());
         $worker->run(200);
+
+        self::assertSame(
+            [
+                WorkerStartedEvent::class,
+                WorkerRunningEvent::class,
+                WorkerStoppedEvent::class,
+            ],
+            $seenEvents,
+        );
+
+        $messages = array_column($logger->entries, 'message');
+
+        self::assertSame(
+            [
+                'Worker starting',
+                'Worker starting job run',
+                'Worker finished job run ({ranTime}ms)',
+                'Worker received stop signal',
+                'Worker stopped',
+                'Worker terminated',
+            ],
+            $messages,
+        );
+
+        self::assertArrayHasKey('ranTime', $logger->entries[2]['context']);
     }
 
     public function testJobStopWorker(): void
     {
-        $eventDispatcher = $this->prophesize(EventDispatcherInterface::class);
-        $eventDispatcher->dispatch(Argument::type(WorkerStartedEvent::class))->shouldBeCalledTimes(1);
-        $eventDispatcher->dispatch(Argument::type(WorkerRunningEvent::class))->shouldBeCalledTimes(1);
-        $eventDispatcher->dispatch(Argument::type(WorkerStoppedEvent::class))->shouldBeCalledTimes(1);
+        $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
 
-        $logger = $this->prophesize(LoggerInterface::class);
-        $logger->debug('Worker starting')->shouldBeCalledTimes(1);
-        $logger->debug('Worker starting job run')->shouldBeCalledTimes(1);
-        $logger->debug('Worker finished job run ({ranTime}ms)', Argument::any())->shouldBeCalledTimes(1);
-        $logger->debug('Worker received stop signal')->shouldBeCalledTimes(1);
-        $logger->debug('Worker stopped')->shouldBeCalledTimes(1);
-        $logger->debug('Worker terminated')->shouldBeCalledTimes(1);
+        $seenEvents = [];
+
+        $eventDispatcher
+            ->expects(self::exactly(3))
+            ->method('dispatch')
+            ->willReturnCallback(
+                static function (object $event) use (&$seenEvents): object {
+                    $seenEvents[] = $event::class;
+
+                    return $event;
+                },
+            );
+
+        $logger = new DummyLogger();
 
         $worker = new DefaultWorker(
-            static function ($stop): void {
+            static function (callable $stop): void {
                 $stop();
             },
-            $eventDispatcher->reveal(),
-            $logger->reveal(),
+            $eventDispatcher,
+            $logger,
         );
 
         $worker->run(0);
+
+        self::assertSame(
+            [
+                WorkerStartedEvent::class,
+                WorkerRunningEvent::class,
+                WorkerStoppedEvent::class,
+            ],
+            $seenEvents,
+        );
+
+        $messages = array_column($logger->entries, 'message');
+
+        self::assertSame(
+            [
+                'Worker starting',
+                'Worker starting job run',
+                'Worker received stop signal',
+                'Worker finished job run ({ranTime}ms)',
+                'Worker stopped',
+                'Worker terminated',
+            ],
+            $messages,
+        );
+
+        self::assertArrayHasKey('ranTime', $logger->entries[3]['context']);
     }
 
     public function testCustomEventDispatcher(): void
@@ -85,18 +143,19 @@ final class DefaultWorkerTest extends TestCase
         $eventDispatcher = new EventDispatcher();
         $eventDispatcher->addListener(WorkerStartedEvent::class, $listener);
 
-        $logger = $this->prophesize(LoggerInterface::class);
+        $logger = new DummyLogger();
+
         $worker = DefaultWorker::create(
-            static function ($stop): void {
+            static function (callable $stop): void {
                 $stop();
             },
             [],
-            $logger->reveal(),
+            $logger,
             $eventDispatcher,
         );
 
         $worker->run(0);
 
-        self::assertEquals(1, $listener->called);
+        self::assertSame(1, $listener->called);
     }
 }

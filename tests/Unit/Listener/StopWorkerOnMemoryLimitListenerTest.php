@@ -9,17 +9,13 @@ use Patchlevel\Worker\Event\WorkerRunningEvent;
 use Patchlevel\Worker\Listener\StopWorkerOnMemoryLimitListener;
 use Patchlevel\Worker\Worker;
 use PHPUnit\Framework\TestCase;
-use Prophecy\PhpUnit\ProphecyTrait;
 
 final class StopWorkerOnMemoryLimitListenerTest extends TestCase
 {
-    use ProphecyTrait;
-
     public function testShouldNotStop(): void
     {
-        $workerMock = $this->prophesize(Worker::class);
-        $workerMock->stop()->shouldNotBeCalled();
-        $worker = $workerMock->reveal();
+        $worker = $this->createMock(Worker::class);
+        $worker->expects($this->never())->method('stop');
 
         $listener = new StopWorkerOnMemoryLimitListener(Bytes::parseFromString('5GB'));
         $listener->onWorkerRunning(new WorkerRunningEvent($worker));
@@ -27,9 +23,8 @@ final class StopWorkerOnMemoryLimitListenerTest extends TestCase
 
     public function testShouldStop(): void
     {
-        $workerMock = $this->prophesize(Worker::class);
-        $workerMock->stop()->shouldBeCalled();
-        $worker = $workerMock->reveal();
+        $worker = $this->createMock(Worker::class);
+        $worker->expects($this->once())->method('stop');
 
         $listener = new StopWorkerOnMemoryLimitListener(Bytes::parseFromString('1KB'));
         $listener->onWorkerRunning(new WorkerRunningEvent($worker));

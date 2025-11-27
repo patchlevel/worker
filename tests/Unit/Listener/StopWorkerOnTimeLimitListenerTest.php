@@ -8,19 +8,15 @@ use Patchlevel\Worker\Event\WorkerRunningEvent;
 use Patchlevel\Worker\Listener\StopWorkerOnTimeLimitListener;
 use Patchlevel\Worker\Worker;
 use PHPUnit\Framework\TestCase;
-use Prophecy\PhpUnit\ProphecyTrait;
 
 use function sleep;
 
 final class StopWorkerOnTimeLimitListenerTest extends TestCase
 {
-    use ProphecyTrait;
-
     public function testShouldNotStop(): void
     {
-        $workerMock = $this->prophesize(Worker::class);
-        $workerMock->stop()->shouldNotBeCalled();
-        $worker = $workerMock->reveal();
+        $worker = $this->createMock(Worker::class);
+        $worker->expects($this->never())->method('stop');
 
         $listener = new StopWorkerOnTimeLimitListener(10);
         $listener->onWorkerStarted();
@@ -29,9 +25,8 @@ final class StopWorkerOnTimeLimitListenerTest extends TestCase
 
     public function testShouldStop(): void
     {
-        $workerMock = $this->prophesize(Worker::class);
-        $workerMock->stop()->shouldBeCalled();
-        $worker = $workerMock->reveal();
+        $worker = $this->createMock(Worker::class);
+        $worker->expects($this->once())->method('stop');
 
         $listener = new StopWorkerOnTimeLimitListener(1);
         $listener->onWorkerStarted();
