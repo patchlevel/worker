@@ -26,12 +26,16 @@ final class DefaultWorker implements Worker
 {
     private bool $shouldStop = false;
 
+    /** @var Closure():int  */
+    private Closure $timeMeasure;
+
     /** @param Closure(Closure):void $job */
     public function __construct(
         private readonly Closure $job,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly LoggerInterface|null $logger = null,
     ) {
+        $this->timeMeasure = static fn () => (int)round(microtime(true) * 1000);
     }
 
     /** @param positive-int|0 $sleepTimer in milliseconds */
@@ -44,11 +48,11 @@ final class DefaultWorker implements Worker
         while (!$this->shouldStop) {
             $this->logger?->debug('Worker starting job run');
 
-            $startTime = (int)round(microtime(true) * 1000);
+            $startTime = ($this->timeMeasure)();
 
             ($this->job)($this->stop(...));
 
-            $endTime = (int)round(microtime(true) * 1000);
+            $endTime = ($this->timeMeasure)();
             $ranTime = $endTime - $startTime;
 
             $this->logger?->debug('Worker finished job run ({ranTime}ms)', ['ranTime' => $ranTime]);
