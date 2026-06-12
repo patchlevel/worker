@@ -20,24 +20,16 @@ phpstan: vendor                                                                 
 phpstan-baseline: vendor                                                        ## run phpstan static code analyser
 	vendor/bin/phpstan analyse --generate-baseline
 
-.PHONY: psalm
-psalm: vendor                                                                   ## run psalm static code analyser
-	vendor/bin/psalm
-
-.PHONY: psalm-baseline
-psalm-baseline: vendor                                                          ## run psalm static code analyser
-	vendor/bin/psalm --update-baseline --set-baseline=baseline.xml
-
 .PHONY: phpunit
 phpunit: vendor                                                                 ## run phpunit tests
 	XDEBUG_MODE=coverage vendor/bin/phpunit
 
 .PHONY: infection
 infection: vendor                                                               ## run infection
-	XDEBUG_MODE=coverage vendor/bin/infection --threads=max
+	XDEBUG_MODE=coverage vendor/bin/infection --threads=7
 
 .PHONY: static
-static: psalm phpstan phpcs-check                                               ## run static analyser
+static: phpstan cs                                               ## run static analyser
 
 test: phpunit                                                                   ## run tests
 
