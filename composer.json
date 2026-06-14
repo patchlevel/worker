@@ -30,7 +30,8 @@
     "phpstan/phpstan": "^2.1.32",
     "phpstan/phpstan-phpunit": "^2.0.8",
     "phpunit/phpunit": "^11.5.3",
-    "symfony/var-dumper": "^5.4.29 || ^6.4.0 || ^7.0.0 || ^8.0.0"
+    "symfony/var-dumper": "^5.4.29 || ^6.4.0 || ^7.0.0 || ^8.0.0",
+    "wnx/commonmark-markdown-renderer": "^1.6"
   },
   "config": {
     "preferred-install": {

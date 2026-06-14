@@ -22,7 +22,7 @@ final class StopWorkerOnNewDeploymentListener implements EventSubscriberInterfac
 {
     public function onWorkerRunning(WorkerRunningEvent $event): void
     {
-        if (/* new version deployed */) {
+        if (new_version_deployed()) {
             $event->worker->stop();
         }
     }
@@ -33,7 +33,6 @@ final class StopWorkerOnNewDeploymentListener implements EventSubscriberInterfac
     }
 }
 ```
-
 Pass your own event dispatcher to `create` to register additional listeners:
 
 ```php

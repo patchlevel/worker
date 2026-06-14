@@ -7,10 +7,10 @@ It takes the job to execute, an array of limit options and an optional PSR-3 log
 use Patchlevel\Worker\DefaultWorker;
 
 $worker = DefaultWorker::create(
-    function (callable $stop): void {
+    static function (callable $stop): void {
         // do a unit of work
 
-        if (/* nothing left to do */) {
+        if (nothing_left_todo()) {
             $stop();
         }
     },
@@ -24,7 +24,6 @@ $worker = DefaultWorker::create(
 
 $worker->run();
 ```
-
 The job is executed in a loop until the worker is stopped.
 The job receives a `$stop` callback: calling it tells the worker to exit the loop
 after the current iteration has finished. The worker never aborts a running job —
@@ -72,7 +71,6 @@ Without `ext-pcntl` this feature is not available.
 ```php
 $worker->run(500); // aim for one iteration every 500ms
 ```
-
 The job's own run time is subtracted from the sleep: if the job took 300ms and the sleep timer
 is 500ms, the worker only sleeps 200ms. If the job took longer than the sleep timer,
 the next iteration starts immediately. Pass `0` to disable sleeping entirely.
