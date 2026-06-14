@@ -1,0 +1,20 @@
+{
+  "navigation": [
+    {
+      "title": "Introduction",
+      "file": "introduction.md"
+    },
+    {
+      "title": "Getting Started",
+      "file": "getting-started.md"
+    },
+    {
+      "title": "Events & Listeners",
+      "file": "events.md"
+    },
+    {
+      "title": "Integration",
+      "file": "integration.md"
+    }
+  ]
+}
