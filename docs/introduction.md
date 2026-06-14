@@ -19,7 +19,6 @@ It was extracted from the [event-sourcing](https://github.com/patchlevel/event-s
 ```bash
 composer require patchlevel/worker
 ```
-
 :::tip
 Start with the [getting started](getting-started.md) guide to get a feeling for the library.
 :::

@@ -33,7 +33,6 @@ final class StopWorkerOnNewDeploymentListener implements EventSubscriberInterfac
     }
 }
 ```
-
 Pass your own event dispatcher to `create` to register additional listeners:
 
 ```php

@@ -35,3 +35,22 @@ test: phpunit                                                                   
 
 .PHONY: dev
 dev: static test                                                                ## run dev tools
+
+.PHONY: docs-extract-php
+docs-extract-php:
+	bin/docs-extract-php-code
+
+.PHONY: docs-inject-php
+docs-inject-php:
+	bin/docs-inject-php-code
+
+.PHONY: docs-format																## format docs
+docs-format: docs-phpcs docs-inject-php
+
+.PHONY: docs-php-lint															## lint docs code
+docs-php-lint: docs-extract-php
+	php -l docs_php/*.php | grep 'Parse error: '
+
+.PHONY: docs-phpcs
+docs-phpcs: docs-extract-php
+	vendor/bin/phpcbf docs_php --exclude=SlevomatCodingStandard.TypeHints.DeclareStrictTypes,SlevomatCodingStandard.ControlStructures.EarlyExit || true

@@ -6,12 +6,6 @@ so they can be configured per environment.
 ## Symfony
 
 ```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Console\Command;
-
 use Patchlevel\Worker\DefaultWorker;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Attribute\Option;
@@ -36,7 +30,7 @@ final class WorkerCommand
         $logger = new ConsoleLogger($output);
 
         $worker = DefaultWorker::create(
-            function (callable $stop): void {
+            static function (callable $stop): void {
                 // do something
 
                 if (/* some condition */) {
@@ -48,7 +42,7 @@ final class WorkerCommand
                 'memoryLimit' => $memoryLimit,
                 'timeLimit' => $timeLimit,
             ],
-            $logger
+            $logger,
         );
 
         $worker->run($sleep);
@@ -57,22 +51,14 @@ final class WorkerCommand
     }
 }
 ```
-
 Run it with the limits suited to your deployment:
 
 ```bash
 bin/console app:worker --time-limit=3600 --memory-limit=512MB -v
 ```
-
 ## Laravel
 
 ```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Console\Commands;
-
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -93,7 +79,7 @@ final class WorkerCommand extends Command
         $timeLimit = $this->option('time-limit');
 
         $worker = DefaultWorker::create(
-            function (callable $stop): void {
+            static function (callable $stop): void {
                 // do something
 
                 if (/* some condition */) {
@@ -101,26 +87,24 @@ final class WorkerCommand extends Command
                 }
             },
             [
-                'runLimit' => $runLimit !== null ? (int) $runLimit : null,
+                'runLimit' => $runLimit !== null ? (int)$runLimit : null,
                 'memoryLimit' => $this->option('memory-limit'),
-                'timeLimit' => $timeLimit !== null ? (int) $timeLimit : null,
+                'timeLimit' => $timeLimit !== null ? (int)$timeLimit : null,
             ],
             $logger,
         );
 
-        $worker->run((int) $this->option('sleep'));
+        $worker->run((int)$this->option('sleep'));
 
         return self::SUCCESS;
     }
 }
 ```
-
 Run it with the limits suited to your deployment:
 
 ```bash
 php artisan app:worker --time-limit=3600 --memory-limit=512MB
 ```
-
 :::note
 The injected `LoggerInterface` writes to Laravel's default log channel.
 Use a dedicated channel if you want the worker output separated from the rest of your application logs.
