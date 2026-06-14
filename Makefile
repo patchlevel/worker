@@ -36,6 +36,9 @@ test: phpunit                                                                   
 .PHONY: dev
 dev: static test                                                                ## run dev tools
 
+.PHONY: docs
+docs: docs-extract-php docs-php-lint docs-phpcs docs-inject-php
+
 .PHONY: docs-extract-php
 docs-extract-php:
 	bin/docs-extract-php-code
@@ -49,7 +52,7 @@ docs-format: docs-phpcs docs-inject-php
 
 .PHONY: docs-php-lint															## lint docs code
 docs-php-lint: docs-extract-php
-	php -l docs_php/*.php | grep 'Parse error: '
+	php -l docs_php/*.php | grep 'Parse error: ' || true
 
 .PHONY: docs-phpcs
 docs-phpcs: docs-extract-php

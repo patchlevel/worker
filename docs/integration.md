@@ -33,7 +33,7 @@ final class WorkerCommand
             static function (callable $stop): void {
                 // do something
 
-                if (/* some condition */) {
+                if (some_condition()) {
                     $stop();
                 }
             },
@@ -82,7 +82,7 @@ final class WorkerCommand extends Command
             static function (callable $stop): void {
                 // do something
 
-                if (/* some condition */) {
+                if (some_condition()) {
                     $stop();
                 }
             },

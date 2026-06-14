@@ -10,7 +10,7 @@ $worker = DefaultWorker::create(
     static function (callable $stop): void {
         // do a unit of work
 
-        if (/* nothing left to do */) {
+        if (nothing_left_todo()) {
             $stop();
         }
     },
