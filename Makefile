@@ -41,11 +41,11 @@ docs: docs-extract-php docs-php-lint docs-phpcs docs-inject-php
 
 .PHONY: docs-extract-php
 docs-extract-php:
-	bin/docs-extract-php-code
+	vendor/bin/docs-extract-php-code
 
 .PHONY: docs-inject-php
 docs-inject-php:
-	bin/docs-inject-php-code
+	vendor/bin/docs-inject-php-code
 
 .PHONY: docs-format																## format docs
 docs-format: docs-phpcs docs-inject-php
