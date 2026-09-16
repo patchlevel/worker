@@ -54,11 +54,5 @@
     "psr-4": {
       "Patchlevel\\Worker\\Tests\\": "tests/"
     }
-  },
-  "repositories": {
-    "docs-tools": {
-      "type": "vcs",
-      "url": "https://github.com/patchlevel/docs-tools"
-    }
   }
 }

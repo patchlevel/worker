@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5b56477446462ad0ed29a672d8db96ed",
+    "content-hash": "f26892944ad30395301051982b384c32",
     "packages": [
         {
             "name": "psr/event-dispatcher",
@@ -2041,13 +2041,14 @@
                 "bin/docs-inject-php-code"
             ],
             "type": "library",
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
             "description": "Extract and re-inject PHP code samples from/into markdown documentation",
             "support": {
-                "source": "https://github.com/patchlevel/docs-tools/tree/v1.0.0",
-                "issues": "https://github.com/patchlevel/docs-tools/issues"
+                "issues": "https://github.com/patchlevel/docs-tools/issues",
+                "source": "https://github.com/patchlevel/docs-tools/tree/v1.0.0"
             },
             "time": "2026-09-16T12:33:28+00:00"
         },
