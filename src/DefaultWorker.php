@@ -28,7 +28,7 @@ final class DefaultWorker implements Worker
 
     private readonly ClockInterface $clock;
 
-    /** @param Closure(Closure):void $job */
+    /** @param Closure(Closure):(bool|void) $job return true if the job did work to skip the sleep */
     public function __construct(
         private readonly Closure $job,
         private readonly EventDispatcherInterface $eventDispatcher,
@@ -53,7 +53,7 @@ final class DefaultWorker implements Worker
 
                 $startTime = $this->milliseconds();
 
-                ($this->job)($this->stop(...));
+                $didWork = ($this->job)($this->stop(...)) === true;
 
                 $endTime = $this->milliseconds();
                 $ranTime = $endTime - $startTime;
@@ -64,6 +64,10 @@ final class DefaultWorker implements Worker
 
                 if ($this->shouldStop) {
                     break;
+                }
+
+                if ($didWork) {
+                    continue;
                 }
 
                 $sleepFor = max($sleepTimer - $ranTime, 0);
@@ -95,7 +99,7 @@ final class DefaultWorker implements Worker
     }
 
     /**
-     * @param Closure(Closure):void                                                                               $job
+     * @param Closure(Closure):(bool|void)                                                                        $job
      * @param array{runLimit?: (positive-int|null), memoryLimit?: (string|null), timeLimit?: (positive-int|null)} $options
      */
     public static function create(
