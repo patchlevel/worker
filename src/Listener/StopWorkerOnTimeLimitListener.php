@@ -4,32 +4,38 @@ declare(strict_types=1);
 
 namespace Patchlevel\Worker\Listener;
 
+use DateInterval;
+use DateTimeImmutable;
 use Patchlevel\Worker\Event\WorkerRunningEvent;
 use Patchlevel\Worker\Event\WorkerStartedEvent;
+use Patchlevel\Worker\SystemClock;
+use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-use function time;
-
 final class StopWorkerOnTimeLimitListener implements EventSubscriberInterface
 {
-    private float $endTime = 0;
+    private DateTimeImmutable|null $endTime = null;
+
+    private readonly ClockInterface $clock;
 
     /** @param positive-int $timeLimit in seconds */
     public function __construct(
         private readonly int $timeLimit,
         private readonly LoggerInterface|null $logger = null,
+        ClockInterface|null $clock = null,
     ) {
+        $this->clock = $clock ?? new SystemClock();
     }
 
     public function onWorkerStarted(): void
     {
-        $this->endTime = time() + $this->timeLimit;
+        $this->endTime = $this->clock->now()->add(new DateInterval('PT' . $this->timeLimit . 'S'));
     }
 
     public function onWorkerRunning(WorkerRunningEvent $event): void
     {
-        if ($this->endTime >= time()) {
+        if ($this->endTime !== null && $this->clock->now() < $this->endTime) {
             return;
         }
 

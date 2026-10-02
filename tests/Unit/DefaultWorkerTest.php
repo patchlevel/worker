@@ -13,10 +13,10 @@ use Patchlevel\Worker\Listener\StopWorkerOnMemoryLimitListener;
 use Patchlevel\Worker\Listener\StopWorkerOnSignalListener;
 use Patchlevel\Worker\Listener\StopWorkerOnTimeLimitListener;
 use Patchlevel\Worker\Tests\ReturnCallback;
+use Patchlevel\Worker\Tests\TestClock;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
-use ReflectionClass;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -140,12 +140,14 @@ final class DefaultWorkerTest extends TestCase
             ->expects($this->never())
             ->method('debug');
 
+        $clock = new TestClock();
+
         $invokationCount = $this->exactly(4);
         $invokationParameters = [
             [new StopWorkerOnSignalListener(logger: $logger)],
             [new StopWorkerOnIterationLimitListener(10, $logger)],
             [new StopWorkerOnMemoryLimitListener(Bytes::parseFromString('10KB'), $logger)],
-            [new StopWorkerOnTimeLimitListener(20, $logger)],
+            [new StopWorkerOnTimeLimitListener(20, $logger, $clock)],
         ];
 
         $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
@@ -167,6 +169,7 @@ final class DefaultWorkerTest extends TestCase
             ],
             $logger,
             $eventDispatcher,
+            $clock,
         );
     }
 
@@ -193,24 +196,12 @@ final class DefaultWorkerTest extends TestCase
         $eventDispatcher = new EventDispatcher();
         $eventDispatcher->addSubscriber(new StopWorkerOnIterationLimitListener(2));
 
-        $calls = 0;
-
         $worker = new DefaultWorker(
             static fn () => null,
             $eventDispatcher,
             $logger,
+            new TestClock(tick: 10),
         );
-
-        (new ReflectionClass($worker))
-            ->getProperty('timeMeasure')
-            ->setValue(
-                $worker,
-                static function () use (&$calls): int {
-                    $calls++;
-
-                    return $calls * 10;
-                },
-            );
 
         $worker->run(200);
     }
@@ -240,24 +231,12 @@ final class DefaultWorkerTest extends TestCase
         $eventDispatcher = new EventDispatcher();
         $eventDispatcher->addSubscriber(new StopWorkerOnIterationLimitListener(2));
 
-        $calls = 0;
-
         $worker = new DefaultWorker(
             static fn () => null,
             $eventDispatcher,
             $logger,
+            new TestClock(tick: 10),
         );
-
-        (new ReflectionClass($worker))
-            ->getProperty('timeMeasure')
-            ->setValue(
-                $worker,
-                static function () use (&$calls): int {
-                    $calls++;
-
-                    return $calls * 10;
-                },
-            );
 
         $worker->run(5);
     }

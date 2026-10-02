@@ -12,30 +12,29 @@ use Patchlevel\Worker\Listener\StopWorkerOnIterationLimitListener;
 use Patchlevel\Worker\Listener\StopWorkerOnMemoryLimitListener;
 use Patchlevel\Worker\Listener\StopWorkerOnSignalListener;
 use Patchlevel\Worker\Listener\StopWorkerOnTimeLimitListener;
+use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 use function max;
-use function microtime;
-use function round;
 use function usleep;
 
 final class DefaultWorker implements Worker
 {
     private bool $shouldStop = false;
 
-    /** @var Closure():int  */
-    private Closure $timeMeasure;
+    private readonly ClockInterface $clock;
 
     /** @param Closure(Closure):void $job */
     public function __construct(
         private readonly Closure $job,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly LoggerInterface|null $logger = null,
+        ClockInterface|null $clock = null,
     ) {
-        $this->timeMeasure = static fn () => (int)round(microtime(true) * 1000);
+        $this->clock = $clock ?? new SystemClock();
     }
 
     /** @param positive-int|0 $sleepTimer in milliseconds */
@@ -48,11 +47,11 @@ final class DefaultWorker implements Worker
         while (!$this->shouldStop) {
             $this->logger?->debug('Worker starting job run');
 
-            $startTime = ($this->timeMeasure)();
+            $startTime = $this->milliseconds();
 
             ($this->job)($this->stop(...));
 
-            $endTime = ($this->timeMeasure)();
+            $endTime = $this->milliseconds();
             $ranTime = $endTime - $startTime;
 
             $this->logger?->debug('Worker finished job run ({ranTime}ms)', ['ranTime' => $ranTime]);
@@ -97,6 +96,7 @@ final class DefaultWorker implements Worker
         array $options = [],
         LoggerInterface $logger = new NullLogger(),
         EventDispatcherInterface|null $eventDispatcher = null,
+        ClockInterface|null $clock = null,
     ): self {
         if ($eventDispatcher === null) {
             $eventDispatcher = new EventDispatcher();
@@ -118,7 +118,7 @@ final class DefaultWorker implements Worker
 
         if (isset($options['timeLimit'])) {
             $eventDispatcher->addSubscriber(
-                new StopWorkerOnTimeLimitListener($options['timeLimit'], $logger),
+                new StopWorkerOnTimeLimitListener($options['timeLimit'], $logger, $clock),
             );
         }
 
@@ -126,6 +126,12 @@ final class DefaultWorker implements Worker
             $job,
             $eventDispatcher,
             $logger,
+            $clock,
         );
+    }
+
+    private function milliseconds(): int
+    {
+        return (int)$this->clock->now()->format('Uv');
     }
 }
