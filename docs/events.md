@@ -49,3 +49,8 @@ $worker = DefaultWorker::create(
     $eventDispatcher,
 );
 ```
+:::warning
+`create` registers the limit listeners on the given event dispatcher.
+If you create multiple workers with the same event dispatcher, all of them share each other's limits.
+Use a separate event dispatcher per worker.
+:::
