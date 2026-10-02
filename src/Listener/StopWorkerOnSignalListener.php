@@ -12,12 +12,14 @@ use function function_exists;
 use function pcntl_async_signals;
 use function pcntl_signal;
 
+use const SIGINT;
 use const SIGTERM;
 
-/** @deprecated since 1.6, use StopWorkerOnSignalListener instead */
-final class StopWorkerOnSigtermSignalListener implements EventSubscriberInterface
+final class StopWorkerOnSignalListener implements EventSubscriberInterface
 {
+    /** @param list<int>|null $signals defaults to SIGTERM and SIGINT */
     public function __construct(
+        private readonly array|null $signals = null,
         private readonly LoggerInterface|null $logger = null,
     ) {
     }
@@ -26,10 +28,12 @@ final class StopWorkerOnSigtermSignalListener implements EventSubscriberInterfac
     {
         pcntl_async_signals(true);
 
-        pcntl_signal(SIGTERM, function () use ($event): void {
-            $this->logger?->info('Received SIGTERM signal.');
-            $event->worker->stop();
-        });
+        foreach ($this->signals ?? [SIGTERM, SIGINT] as $signal) {
+            pcntl_signal($signal, function (int $signal) use ($event): void {
+                $this->logger?->info('Worker received signal {signal}', ['signal' => $signal]);
+                $event->worker->stop();
+            });
+        }
     }
 
     /** @return array<class-string, string> */

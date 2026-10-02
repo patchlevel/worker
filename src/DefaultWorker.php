@@ -10,7 +10,7 @@ use Patchlevel\Worker\Event\WorkerStartedEvent;
 use Patchlevel\Worker\Event\WorkerStoppedEvent;
 use Patchlevel\Worker\Listener\StopWorkerOnIterationLimitListener;
 use Patchlevel\Worker\Listener\StopWorkerOnMemoryLimitListener;
-use Patchlevel\Worker\Listener\StopWorkerOnSigtermSignalListener;
+use Patchlevel\Worker\Listener\StopWorkerOnSignalListener;
 use Patchlevel\Worker\Listener\StopWorkerOnTimeLimitListener;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -100,7 +100,7 @@ final class DefaultWorker implements Worker
             $eventDispatcher = new EventDispatcher();
         }
 
-        $eventDispatcher->addSubscriber(new StopWorkerOnSigtermSignalListener($logger));
+        $eventDispatcher->addSubscriber(new StopWorkerOnSignalListener(logger: $logger));
 
         if (isset($options['runLimit'])) {
             $eventDispatcher->addSubscriber(

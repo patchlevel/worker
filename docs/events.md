@@ -11,7 +11,7 @@ each carrying the worker instance:
 
 All [limits](getting-started.md#limits) are implemented as event subscribers
 (`StopWorkerOnIterationLimitListener`, `StopWorkerOnMemoryLimitListener`,
-`StopWorkerOnTimeLimitListener`, `StopWorkerOnSigtermSignalListener`),
+`StopWorkerOnTimeLimitListener`, `StopWorkerOnSignalListener`),
 so you can add your own stop conditions the same way:
 
 ```php

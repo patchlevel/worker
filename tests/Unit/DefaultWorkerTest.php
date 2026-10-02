@@ -10,7 +10,7 @@ use Patchlevel\Worker\Event\WorkerRunningEvent;
 use Patchlevel\Worker\Event\WorkerStartedEvent;
 use Patchlevel\Worker\Listener\StopWorkerOnIterationLimitListener;
 use Patchlevel\Worker\Listener\StopWorkerOnMemoryLimitListener;
-use Patchlevel\Worker\Listener\StopWorkerOnSigtermSignalListener;
+use Patchlevel\Worker\Listener\StopWorkerOnSignalListener;
 use Patchlevel\Worker\Listener\StopWorkerOnTimeLimitListener;
 use Patchlevel\Worker\Tests\ReturnCallback;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -142,7 +142,7 @@ final class DefaultWorkerTest extends TestCase
 
         $invokationCount = $this->exactly(4);
         $invokationParameters = [
-            [new StopWorkerOnSigtermSignalListener($logger)],
+            [new StopWorkerOnSignalListener(logger: $logger)],
             [new StopWorkerOnIterationLimitListener(10, $logger)],
             [new StopWorkerOnMemoryLimitListener(Bytes::parseFromString('10KB'), $logger)],
             [new StopWorkerOnTimeLimitListener(20, $logger)],

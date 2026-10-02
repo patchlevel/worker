@@ -32,7 +32,7 @@ stopping always happens *between* iterations, so your job is never interrupted h
 ## Limits
 
 All options are optional. Without limits the worker runs until it is stopped
-via `$stop()`, `$worker->stop()` or a SIGTERM signal.
+via `$stop()`, `$worker->stop()` or a SIGTERM/SIGINT signal.
 
 | Option        | Type     | Description                                                                                                                     |
 |---------------|----------|---------------------------------------------------------------------------------------------------------------------------------|
@@ -51,11 +51,11 @@ Internally every limit is implemented as an event listener.
 You can add your own stop conditions the same way, see [events & listeners](events.md).
 :::
 
-## Graceful shutdown on SIGTERM
+## Graceful shutdown
 
-If the `pcntl` extension is available, the worker automatically registers a SIGTERM handler.
-When the process receives SIGTERM (e.g. from `docker stop`, a Kubernetes pod shutdown or supervisor),
-the worker finishes the current iteration and then exits cleanly.
+If the `pcntl` extension is available, the worker automatically registers a handler for SIGTERM and SIGINT.
+When the process receives SIGTERM (e.g. from `docker stop`, a Kubernetes pod shutdown or supervisor)
+or SIGINT (e.g. pressing `Ctrl+C`), the worker finishes the current iteration and then exits cleanly.
 
 This makes the worker a good fit for process managers that send SIGTERM and restart the process,
 e.g. to roll out a new version or to keep long-running processes fresh.
@@ -63,6 +63,9 @@ e.g. to roll out a new version or to keep long-running processes fresh.
 :::warning
 Without `ext-pcntl` this feature is not available.
 :::
+
+If you need to react to other signals, register the `StopWorkerOnSignalListener` with your own list of signals
+on a custom event dispatcher, see [events & listeners](events.md).
 
 ## Sleep
 
@@ -78,7 +81,7 @@ the next iteration starts immediately. Pass `0` to disable sleeping entirely.
 ## Logging
 
 The worker logs its lifecycle (start, iteration timings, sleep, stop reason) to the given PSR-3 logger.
-Iteration details use the `debug` level; stop reasons (limit exceeded, SIGTERM received) use `info`.
+Iteration details use the `debug` level; stop reasons (limit exceeded, signal received) use `info`.
 
 With the `ConsoleLogger` from the [Symfony command example](integration.md#symfony), run the command with `-v`
 to see stop reasons or `-vvv` to see everything.
