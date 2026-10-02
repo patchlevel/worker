@@ -29,6 +29,9 @@ The job receives a `$stop` callback: calling it tells the worker to exit the loo
 after the current iteration has finished. The worker never aborts a running job —
 stopping always happens *between* iterations, so your job is never interrupted halfway.
 
+If the job throws an exception, the worker stops, dispatches the `WorkerStoppedEvent`
+and rethrows the exception, so the process exits with an error.
+
 ## Limits
 
 All options are optional. Without limits the worker runs until it is stopped

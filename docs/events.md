@@ -9,6 +9,22 @@ each carrying the worker instance:
 | `WorkerRunningEvent` | after every iteration               |
 | `WorkerStoppedEvent` | once, after the worker has stopped  |
 
+`WorkerStoppedEvent` is also dispatched if the job throws an exception.
+In that case the exception is available via `$event->exception` and is rethrown afterwards,
+so listeners can clean up resources and still distinguish a crash from a regular stop:
+
+```php
+use Patchlevel\Worker\Event\WorkerStoppedEvent;
+
+$eventDispatcher->addListener(
+    WorkerStoppedEvent::class,
+    static function (WorkerStoppedEvent $event): void {
+        if ($event->exception !== null) {
+            // the worker crashed
+        }
+    },
+);
+```
 All [limits](getting-started.md#limits) are implemented as event subscribers
 (`StopWorkerOnIterationLimitListener`, `StopWorkerOnMemoryLimitListener`,
 `StopWorkerOnTimeLimitListener`, `StopWorkerOnSignalListener`),

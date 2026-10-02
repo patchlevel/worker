@@ -8,6 +8,7 @@ use Patchlevel\Worker\Bytes;
 use Patchlevel\Worker\DefaultWorker;
 use Patchlevel\Worker\Event\WorkerRunningEvent;
 use Patchlevel\Worker\Event\WorkerStartedEvent;
+use Patchlevel\Worker\Event\WorkerStoppedEvent;
 use Patchlevel\Worker\Listener\StopWorkerOnIterationLimitListener;
 use Patchlevel\Worker\Listener\StopWorkerOnMemoryLimitListener;
 use Patchlevel\Worker\Listener\StopWorkerOnSignalListener;
@@ -17,6 +18,7 @@ use Patchlevel\Worker\Tests\TestClock;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -288,5 +290,76 @@ final class DefaultWorkerTest extends TestCase
         $worker->run(0);
 
         self::assertSame(0, $calls);
+    }
+
+    public function testStoppedEventWithoutException(): void
+    {
+        $stoppedEvent = null;
+
+        $eventDispatcher = new EventDispatcher();
+        $eventDispatcher->addListener(
+            WorkerStoppedEvent::class,
+            static function (WorkerStoppedEvent $event) use (&$stoppedEvent): void {
+                $stoppedEvent = $event;
+            },
+        );
+
+        $worker = new DefaultWorker(
+            static function (callable $stop): void {
+                $stop();
+            },
+            $eventDispatcher,
+        );
+
+        $worker->run(0);
+
+        self::assertInstanceOf(WorkerStoppedEvent::class, $stoppedEvent);
+        self::assertSame($worker, $stoppedEvent->worker);
+        self::assertNull($stoppedEvent->exception);
+    }
+
+    public function testJobExceptionDispatchesStoppedEvent(): void
+    {
+        $exception = new RuntimeException('job failed');
+        $stoppedEvent = null;
+
+        $eventDispatcher = new EventDispatcher();
+        $eventDispatcher->addListener(
+            WorkerStoppedEvent::class,
+            static function (WorkerStoppedEvent $event) use (&$stoppedEvent): void {
+                $stoppedEvent = $event;
+            },
+        );
+
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger
+            ->expects($this->exactly(4))
+            ->method('debug')
+            ->willReturnCallback(
+                new ReturnCallback([
+                    [['Worker starting', []]],
+                    [['Worker starting job run', []]],
+                    [['Worker stopped', []]],
+                    [['Worker terminated', []]],
+                ]),
+            );
+
+        $worker = new DefaultWorker(
+            static function () use ($exception): void {
+                throw $exception;
+            },
+            $eventDispatcher,
+            $logger,
+        );
+
+        try {
+            $worker->run(0);
+            self::fail('Expected exception was not thrown');
+        } catch (RuntimeException $e) {
+            self::assertSame($exception, $e);
+        }
+
+        self::assertInstanceOf(WorkerStoppedEvent::class, $stoppedEvent);
+        self::assertSame($exception, $stoppedEvent->exception);
     }
 }

@@ -17,6 +17,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Throwable;
 
 use function max;
 use function usleep;
@@ -44,41 +45,47 @@ final class DefaultWorker implements Worker
 
         $this->eventDispatcher->dispatch(new WorkerStartedEvent($this));
 
-        while (!$this->shouldStop) {
-            $this->logger?->debug('Worker starting job run');
+        $exception = null;
 
-            $startTime = $this->milliseconds();
+        try {
+            while (!$this->shouldStop) {
+                $this->logger?->debug('Worker starting job run');
 
-            ($this->job)($this->stop(...));
+                $startTime = $this->milliseconds();
 
-            $endTime = $this->milliseconds();
-            $ranTime = $endTime - $startTime;
+                ($this->job)($this->stop(...));
 
-            $this->logger?->debug('Worker finished job run ({ranTime}ms)', ['ranTime' => $ranTime]);
+                $endTime = $this->milliseconds();
+                $ranTime = $endTime - $startTime;
 
-            $this->eventDispatcher->dispatch(new WorkerRunningEvent($this));
+                $this->logger?->debug('Worker finished job run ({ranTime}ms)', ['ranTime' => $ranTime]);
 
-            if ($this->shouldStop) {
-                break;
+                $this->eventDispatcher->dispatch(new WorkerRunningEvent($this));
+
+                if ($this->shouldStop) {
+                    break;
+                }
+
+                $sleepFor = max($sleepTimer - $ranTime, 0);
+
+                if ($sleepFor <= 0) {
+                    continue;
+                }
+
+                $this->logger?->debug('Worker sleep for {sleepTimer}ms', ['sleepTimer' => $sleepFor]);
+                usleep($sleepFor * 1000);
             }
+        } catch (Throwable $exception) {
+            throw $exception;
+        } finally {
+            $this->shouldStop = false;
 
-            $sleepFor = max($sleepTimer - $ranTime, 0);
+            $this->logger?->debug('Worker stopped');
 
-            if ($sleepFor <= 0) {
-                continue;
-            }
+            $this->eventDispatcher->dispatch(new WorkerStoppedEvent($this, $exception));
 
-            $this->logger?->debug('Worker sleep for {sleepTimer}ms', ['sleepTimer' => $sleepFor]);
-            usleep($sleepFor * 1000);
+            $this->logger?->debug('Worker terminated');
         }
-
-        $this->shouldStop = false;
-
-        $this->logger?->debug('Worker stopped');
-
-        $this->eventDispatcher->dispatch(new WorkerStoppedEvent($this));
-
-        $this->logger?->debug('Worker terminated');
     }
 
     public function stop(): void
