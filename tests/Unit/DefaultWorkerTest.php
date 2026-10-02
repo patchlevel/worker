@@ -22,6 +22,8 @@ use RuntimeException;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
+use function array_shift;
+
 #[CoversClass(DefaultWorker::class)]
 final class DefaultWorkerTest extends TestCase
 {
@@ -241,6 +243,45 @@ final class DefaultWorkerTest extends TestCase
         );
 
         $worker->run(5);
+    }
+
+    public function testRunWorkerSkipsSleepWhenJobDidWork(): void
+    {
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger
+            ->expects($this->exactly(11))
+            ->method('debug')
+            ->willReturnCallback(
+                new ReturnCallback([
+                    [['Worker starting', []]],
+                    [['Worker starting job run', []]],
+                    [['Worker finished job run ({ranTime}ms)', ['ranTime' => 10]]],
+                    [['Worker starting job run', []]],
+                    [['Worker finished job run ({ranTime}ms)', ['ranTime' => 10]]],
+                    [['Worker sleep for {sleepTimer}ms', ['sleepTimer' => 190]]],
+                    [['Worker starting job run', []]],
+                    [['Worker finished job run ({ranTime}ms)', ['ranTime' => 10]]],
+                    [['Worker received stop signal', []]],
+                    [['Worker stopped', []]],
+                    [['Worker terminated', []]],
+                ]),
+            );
+
+        $eventDispatcher = new EventDispatcher();
+        $eventDispatcher->addSubscriber(new StopWorkerOnIterationLimitListener(3));
+
+        $jobResults = [true, false, true];
+
+        $worker = new DefaultWorker(
+            static function () use (&$jobResults): bool {
+                return (bool)array_shift($jobResults);
+            },
+            $eventDispatcher,
+            $logger,
+            new TestClock(tick: 10),
+        );
+
+        $worker->run(200);
     }
 
     public function testDefaultCreate(): void

@@ -81,6 +81,33 @@ The job's own run time is subtracted from the sleep: if the job took 300ms and t
 is 500ms, the worker only sleeps 200ms. If the job took longer than the sleep timer,
 the next iteration starts immediately. Pass `0` to disable sleeping entirely.
 
+### Skip the sleep when there is work
+
+If the job returns `true`, the worker skips the sleep and starts the next iteration immediately.
+This is useful for queue consumers: as long as there are messages, they are processed without a pause,
+and the worker only sleeps once the queue is empty.
+
+```php
+use Patchlevel\Worker\DefaultWorker;
+
+$worker = DefaultWorker::create(
+    static function (callable $stop) use ($queue): bool {
+        $message = $queue->pop();
+
+        if ($message === null) {
+            return false; // nothing to do, sleep
+        }
+
+        handle($message);
+
+        return true; // there may be more, continue immediately
+    },
+);
+
+$worker->run(1000);
+```
+Any other return value, including no return value at all, keeps the regular sleep behaviour.
+
 ## Logging
 
 The worker logs its lifecycle (start, iteration timings, sleep, stop reason) to the given PSR-3 logger.
