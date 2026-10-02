@@ -73,6 +73,8 @@ final class DefaultWorker implements Worker
             usleep($sleepFor * 1000);
         }
 
+        $this->shouldStop = false;
+
         $this->logger?->debug('Worker stopped');
 
         $this->eventDispatcher->dispatch(new WorkerStoppedEvent($this));

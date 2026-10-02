@@ -275,4 +275,39 @@ final class DefaultWorkerTest extends TestCase
 
         self::assertSame(1, $calls);
     }
+
+    public function testRunWorkerTwice(): void
+    {
+        $calls = 0;
+
+        $worker = new DefaultWorker(
+            static function (callable $stop) use (&$calls): void {
+                $calls++;
+                $stop();
+            },
+            new EventDispatcher(),
+        );
+
+        $worker->run(0);
+        $worker->run(0);
+
+        self::assertSame(2, $calls);
+    }
+
+    public function testStopBeforeRun(): void
+    {
+        $calls = 0;
+
+        $worker = new DefaultWorker(
+            static function () use (&$calls): void {
+                $calls++;
+            },
+            new EventDispatcher(),
+        );
+
+        $worker->stop();
+        $worker->run(0);
+
+        self::assertSame(0, $calls);
+    }
 }
