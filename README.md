@@ -5,13 +5,13 @@
 # Worker
 
 A small library to build stable, long-running workers that terminate gracefully when limits are exceeded
-or a SIGTERM signal is received. Perfect for daemonized console commands running under
+or a SIGTERM/SIGINT signal is received. Perfect for daemonized console commands running under
 Docker, Kubernetes, supervisor or systemd, where the process manager restarts the worker after it exits.
 
 ## Features
 
 * Configurable run, memory and time [limits](https://patchlevel.dev/docs/worker/latest/getting-started#limits)
-* [Graceful shutdown](https://patchlevel.dev/docs/worker/latest/getting-started#graceful-shutdown-on-sigterm) on SIGTERM
+* [Graceful shutdown](https://patchlevel.dev/docs/worker/latest/getting-started#graceful-shutdown) on SIGTERM and SIGINT
 * Extensible via [events and custom listeners](https://patchlevel.dev/docs/worker/latest/events)
 * [PSR-3 logging](https://patchlevel.dev/docs/worker/latest/getting-started#logging) of the worker lifecycle
 * Plays well with [Symfony and Laravel console commands](https://patchlevel.dev/docs/worker/latest/integration)
