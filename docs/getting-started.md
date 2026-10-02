@@ -85,3 +85,24 @@ Iteration details use the `debug` level; stop reasons (limit exceeded, signal re
 
 With the `ConsoleLogger` from the [Symfony command example](integration.md#symfony), run the command with `-v`
 to see stop reasons or `-vvv` to see everything.
+
+## Clock
+
+The worker uses a [PSR-20](https://www.php-fig.org/psr/psr-20/) clock to measure the job's run time
+and to check the `timeLimit`. By default it uses the system clock. You can pass your own clock to `create`,
+e.g. a mock clock to test time-dependent behaviour without actually waiting:
+
+```php
+use Patchlevel\Worker\DefaultWorker;
+use Symfony\Component\Clock\MockClock;
+
+$worker = DefaultWorker::create(
+    $job,
+    ['timeLimit' => 3600],
+    $logger,
+    clock: new MockClock(),
+);
+```
+:::note
+The clock is only used for measuring time. The sleep between iterations still waits for real.
+:::
