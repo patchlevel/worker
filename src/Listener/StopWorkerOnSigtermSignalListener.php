@@ -9,6 +9,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 use function function_exists;
+use function pcntl_async_signals;
 use function pcntl_signal;
 
 use const SIGTERM;
@@ -22,6 +23,8 @@ final class StopWorkerOnSigtermSignalListener implements EventSubscriberInterfac
 
     public function onWorkerStarted(WorkerStartedEvent $event): void
     {
+        pcntl_async_signals(true);
+
         pcntl_signal(SIGTERM, function () use ($event): void {
             $this->logger?->info('Received SIGTERM signal.');
             $event->worker->stop();
