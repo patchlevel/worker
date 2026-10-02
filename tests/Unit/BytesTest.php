@@ -28,6 +28,10 @@ final class BytesTest extends TestCase
         yield ['-5GB'];
         yield ['505Foo'];
         yield ['50Kb50'];
+        yield ['50T'];
+        yield ['50TB'];
+        yield ['99999999999GB'];
+        yield ['99999999999999999999'];
     }
 
     #[DataProvider('validParseDataProvider')]
@@ -54,6 +58,15 @@ final class BytesTest extends TestCase
         yield ['50GB', 53_687_091_200, '50.0 GiB'];
         yield ['50Gb', 53_687_091_200, '50.0 GiB'];
         yield ['50gb', 53_687_091_200, '50.0 GiB'];
+
+        yield ['50K', 51_200, '50.0 KiB'];
+        yield ['50k', 51_200, '50.0 KiB'];
+        yield ['512M', 536_870_912, '512.0 MiB'];
+        yield ['512m', 536_870_912, '512.0 MiB'];
+        yield ['1G', 1_073_741_824, '1.0 GiB'];
+        yield ['1g', 1_073_741_824, '1.0 GiB'];
+
+        yield ['0050MB', 52_428_800, '50.0 MiB'];
 
         yield ['1024b', 1024, '1.0 KiB'];
         yield ['1024Kb', 1_048_576, '1.0 MiB'];

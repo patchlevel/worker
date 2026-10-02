@@ -34,16 +34,16 @@ stopping always happens *between* iterations, so your job is never interrupted h
 All options are optional. Without limits the worker runs until it is stopped
 via `$stop()`, `$worker->stop()` or a SIGTERM signal.
 
-| Option        | Type     | Description                                                                                                                     |
-|---------------|----------|---------------------------------------------------------------------------------------------------------------------------------|
-| `runLimit`    | `int`    | Stop after this number of iterations.                                                                                           |
-| `memoryLimit` | `string` | Stop when memory usage exceeds this value, e.g. `128MB`. Supported units: `B`, `KB`, `MB`, `GB` (case-insensitive, 1024-based). |
-| `timeLimit`   | `int`    | Stop after this number of seconds.                                                                                              |
+| Option        | Type     | Description                                                                                                                                           |
+|---------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `runLimit`    | `int`    | Stop after this number of iterations.                                                                                                                 |
+| `memoryLimit` | `string` | Stop when memory usage exceeds this value, e.g. `128MB` or `128M`. Supported units: `B`, `K`/`KB`, `M`/`MB`, `G`/`GB` (case-insensitive, 1024-based). |
+| `timeLimit`   | `int`    | Stop after this number of seconds.                                                                                                                    |
 
 Limits are checked after each iteration. When a limit is exceeded, the worker logs the reason and stops gracefully.
 
 :::warning
-An invalid `memoryLimit` string throws a `Patchlevel\Worker\InvalidFormat` exception.
+An invalid or too large `memoryLimit` string throws a `Patchlevel\Worker\InvalidFormat` exception.
 :::
 
 :::note

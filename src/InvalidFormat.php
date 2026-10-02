@@ -12,6 +12,6 @@ final class InvalidFormat extends InvalidArgumentException
 {
     public function __construct(string $message)
     {
-        parent::__construct(sprintf('Invalid byte format received (got: "%s"). The format must consist of a number and a unit. The following units are allowed: B, KB, MB, GB', $message));
+        parent::__construct(sprintf('Invalid byte format received (got: "%s"). The format must consist of a number and a unit. The following units are allowed: B, K, KB, M, MB, G, GB', $message));
     }
 }

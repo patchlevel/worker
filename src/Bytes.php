@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Patchlevel\Worker;
 
 use function array_key_exists;
+use function is_int;
 use function preg_match;
 use function sprintf;
 use function strtoupper;
@@ -13,8 +14,11 @@ final class Bytes
 {
     private const SIZES = [
         'B' => 1,
+        'K' => 1_024,
         'KB' => 1_024,
+        'M' => 1_048_576,
         'MB' => 1_048_576,
+        'G' => 1_073_741_824,
         'GB' => 1_073_741_824,
     ];
 
@@ -36,14 +40,20 @@ final class Bytes
             throw new InvalidFormat($string);
         }
 
-        $number = (int)$matches[1];
         $unit = strtoupper($matches[2] ?? 'B');
 
         if (!array_key_exists($unit, self::SIZES)) {
             throw new InvalidFormat($string);
         }
 
-        return new self($number * self::SIZES[$unit]);
+        $bytes = $matches[1] * self::SIZES[$unit];
+
+        // integer overflow results in a float
+        if (!is_int($bytes)) {
+            throw new InvalidFormat($string);
+        }
+
+        return new self($bytes);
     }
 
     public function formatted(): string
