@@ -27,18 +27,18 @@ $eventDispatcher->addListener(
 ```
 All [limits](getting-started.md#limits) are implemented as event subscribers
 (`StopWorkerOnIterationLimitListener`, `StopWorkerOnMemoryLimitListener`,
-`StopWorkerOnTimeLimitListener`, `StopWorkerOnSignalListener`),
+`StopWorkerOnTimeLimitListener`, `StopWorkerOnSignalListener`, `StopWorkerOnRestartSignalListener`),
 so you can add your own stop conditions the same way:
 
 ```php
 use Patchlevel\Worker\Event\WorkerRunningEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-final class StopWorkerOnNewDeploymentListener implements EventSubscriberInterface
+final class StopWorkerOnMaintenanceModeListener implements EventSubscriberInterface
 {
     public function onWorkerRunning(WorkerRunningEvent $event): void
     {
-        if (new_version_deployed()) {
+        if (maintenance_mode_enabled()) {
             $event->worker->stop();
         }
     }
@@ -56,7 +56,7 @@ use Patchlevel\Worker\DefaultWorker;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 
 $eventDispatcher = new EventDispatcher();
-$eventDispatcher->addSubscriber(new StopWorkerOnNewDeploymentListener());
+$eventDispatcher->addSubscriber(new StopWorkerOnMaintenanceModeListener());
 
 $worker = DefaultWorker::create(
     $job,
