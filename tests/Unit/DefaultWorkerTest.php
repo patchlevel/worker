@@ -62,7 +62,7 @@ final class DefaultWorkerTest extends TestCase
                 $this->assertSame($invokationParameters[$invokationCount->numberOfInvocations() - 1], $parameters);
             });
 
-        $worker = new DefaultWorker(static fn () => null, $eventDispatcher, $logger);
+        $worker = new DefaultWorker(static fn () => null, $eventDispatcher, $logger, new TestClock());
         $worker->run(200);
     }
 
