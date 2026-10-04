@@ -8,6 +8,7 @@ use Closure;
 use Patchlevel\Worker\Event\WorkerRunningEvent;
 use Patchlevel\Worker\Event\WorkerStartedEvent;
 use Patchlevel\Worker\Event\WorkerStoppedEvent;
+use Patchlevel\Worker\Listener\HeartbeatListener;
 use Patchlevel\Worker\Listener\StopWorkerOnIterationLimitListener;
 use Patchlevel\Worker\Listener\StopWorkerOnMemoryLimitListener;
 use Patchlevel\Worker\Listener\StopWorkerOnSignalListener;
@@ -99,8 +100,8 @@ final class DefaultWorker implements Worker
     }
 
     /**
-     * @param Closure(Closure):(bool|void)                                                                        $job
-     * @param array{runLimit?: (positive-int|null), memoryLimit?: (string|null), timeLimit?: (positive-int|null)} $options
+     * @param Closure(Closure):(bool|void)                                                                                                       $job
+     * @param array{runLimit?: (positive-int|null), memoryLimit?: (string|null), timeLimit?: (positive-int|null), heartbeatFile?: (string|null)} $options
      */
     public static function create(
         Closure $job,
@@ -130,6 +131,12 @@ final class DefaultWorker implements Worker
         if (isset($options['timeLimit'])) {
             $eventDispatcher->addSubscriber(
                 new StopWorkerOnTimeLimitListener($options['timeLimit'], $logger, $clock),
+            );
+        }
+
+        if (isset($options['heartbeatFile'])) {
+            $eventDispatcher->addSubscriber(
+                new HeartbeatListener($options['heartbeatFile'], $logger),
             );
         }
 
