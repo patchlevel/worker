@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Patchlevel\Worker\Tests\Unit\Listener;
 
+use Patchlevel\Worker\Event\WorkerRunningEvent;
+use Patchlevel\Worker\Event\WorkerStartedEvent;
+use Patchlevel\Worker\Event\WorkerStoppedEvent;
 use Patchlevel\Worker\Listener\HeartbeatListener;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -39,7 +42,12 @@ final class HeartbeatListenerTest extends TestCase
 
     public function testCreateFileOnStart(): void
     {
-        $listener = new HeartbeatListener($this->file);
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger
+            ->expects($this->never())
+            ->method('warning');
+
+        $listener = new HeartbeatListener($this->file, $logger);
         $listener->onWorkerStarted();
 
         self::assertFileExists($this->file);
@@ -49,7 +57,12 @@ final class HeartbeatListenerTest extends TestCase
     {
         touch($this->file, time() - 60);
 
-        $listener = new HeartbeatListener($this->file);
+        $logger = $this->createMock(LoggerInterface::class);
+        $logger
+            ->expects($this->never())
+            ->method('warning');
+
+        $listener = new HeartbeatListener($this->file, $logger);
         $listener->onWorkerRunning();
 
         clearstatcache(true, $this->file);
@@ -89,5 +102,17 @@ final class HeartbeatListenerTest extends TestCase
         $listener->onWorkerRunning();
 
         self::assertFileDoesNotExist($file);
+    }
+
+    public function testSubscribedEvents(): void
+    {
+        self::assertSame(
+            [
+                WorkerStartedEvent::class => 'onWorkerStarted',
+                WorkerRunningEvent::class => 'onWorkerRunning',
+                WorkerStoppedEvent::class => 'onWorkerStopped',
+            ],
+            HeartbeatListener::getSubscribedEvents(),
+        );
     }
 }
