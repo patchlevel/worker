@@ -9,6 +9,7 @@ use Patchlevel\Worker\DefaultWorker;
 use Patchlevel\Worker\Event\WorkerRunningEvent;
 use Patchlevel\Worker\Event\WorkerStartedEvent;
 use Patchlevel\Worker\Event\WorkerStoppedEvent;
+use Patchlevel\Worker\Listener\HeartbeatListener;
 use Patchlevel\Worker\Listener\StopWorkerOnIterationLimitListener;
 use Patchlevel\Worker\Listener\StopWorkerOnMemoryLimitListener;
 use Patchlevel\Worker\Listener\StopWorkerOnSignalListener;
@@ -61,7 +62,7 @@ final class DefaultWorkerTest extends TestCase
                 $this->assertSame($invokationParameters[$invokationCount->numberOfInvocations() - 1], $parameters);
             });
 
-        $worker = new DefaultWorker(static fn () => null, $eventDispatcher, $logger);
+        $worker = new DefaultWorker(static fn () => null, $eventDispatcher, $logger, new TestClock());
         $worker->run(200);
     }
 
@@ -146,12 +147,13 @@ final class DefaultWorkerTest extends TestCase
 
         $clock = new TestClock();
 
-        $invokationCount = $this->exactly(4);
+        $invokationCount = $this->exactly(5);
         $invokationParameters = [
             [new StopWorkerOnSignalListener(logger: $logger)],
             [new StopWorkerOnIterationLimitListener(10, $logger)],
             [new StopWorkerOnMemoryLimitListener(Bytes::parseFromString('10KB'), $logger)],
             [new StopWorkerOnTimeLimitListener(20, $logger, $clock)],
+            [new HeartbeatListener('/tmp/worker-heartbeat', $logger)],
         ];
 
         $eventDispatcher = $this->createMock(EventDispatcherInterface::class);
@@ -170,6 +172,7 @@ final class DefaultWorkerTest extends TestCase
                 'runLimit' => 10,
                 'memoryLimit' => '10KB',
                 'timeLimit' => 20,
+                'heartbeatFile' => '/tmp/worker-heartbeat',
             ],
             $logger,
             $eventDispatcher,

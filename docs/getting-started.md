@@ -37,11 +37,12 @@ and rethrows the exception, so the process exits with an error.
 All options are optional. Without limits the worker runs until it is stopped
 via `$stop()`, `$worker->stop()` or a SIGTERM/SIGINT signal.
 
-| Option        | Type     | Description                                                                                                                                           |
-|---------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `runLimit`    | `int`    | Stop after this number of iterations.                                                                                                                 |
-| `memoryLimit` | `string` | Stop when memory usage exceeds this value, e.g. `128MB` or `128M`. Supported units: `B`, `K`/`KB`, `M`/`MB`, `G`/`GB` (case-insensitive, 1024-based). |
-| `timeLimit`   | `int`    | Stop after this number of seconds.                                                                                                                    |
+| Option          | Type     | Description                                                                                                                                           |
+|-----------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `runLimit`      | `int`    | Stop after this number of iterations.                                                                                                                 |
+| `memoryLimit`   | `string` | Stop when memory usage exceeds this value, e.g. `128MB` or `128M`. Supported units: `B`, `K`/`KB`, `M`/`MB`, `G`/`GB` (case-insensitive, 1024-based). |
+| `timeLimit`     | `int`    | Stop after this number of seconds.                                                                                                                    |
+| `heartbeatFile` | `string` | Touch this file on start and after every iteration, see [heartbeat](#heartbeat).                                                                      |
 
 Limits are checked after each iteration. When a limit is exceeded, the worker logs the reason and stops gracefully.
 
@@ -107,6 +108,42 @@ $worker = DefaultWorker::create(
 $worker->run(1000);
 ```
 Any other return value, including no return value at all, keeps the regular sleep behaviour.
+
+## Heartbeat
+
+A process manager only sees whether the worker process is running, not whether it is stuck in a job.
+With the `heartbeatFile` option the worker touches a file when it starts and after every iteration,
+and removes it when it stops. A liveness probe can then check how old the file is:
+
+```php
+use Patchlevel\Worker\DefaultWorker;
+
+$worker = DefaultWorker::create(
+    $job,
+    ['heartbeatFile' => '/tmp/worker-heartbeat'],
+    $logger,
+);
+```
+For example as a Kubernetes liveness probe that restarts the pod if the file is older than 60 seconds:
+
+```yaml
+livenessProbe:
+  exec:
+    command:
+      - sh
+      - -c
+      - test $(( $(date +%s) - $(stat -c %Y /tmp/worker-heartbeat) )) -lt 60
+  initialDelaySeconds: 10
+  periodSeconds: 30
+```
+:::warning
+The file is only updated between iterations. Choose the threshold larger than your longest job
+plus the sleep timer, otherwise a slow but healthy worker is considered dead.
+:::
+
+:::note
+If the file cannot be written, the worker logs a warning and keeps running.
+:::
 
 ## Logging
 
