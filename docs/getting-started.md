@@ -37,12 +37,13 @@ and rethrows the exception, so the process exits with an error.
 All options are optional. Without limits the worker runs until it is stopped
 via `$stop()`, `$worker->stop()` or a SIGTERM/SIGINT signal.
 
-| Option          | Type     | Description                                                                                                                                           |
-|-----------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `runLimit`      | `int`    | Stop after this number of iterations.                                                                                                                 |
-| `memoryLimit`   | `string` | Stop when memory usage exceeds this value, e.g. `128MB` or `128M`. Supported units: `B`, `K`/`KB`, `M`/`MB`, `G`/`GB` (case-insensitive, 1024-based). |
-| `timeLimit`     | `int`    | Stop after this number of seconds.                                                                                                                    |
-| `heartbeatFile` | `string` | Touch this file on start and after every iteration, see [heartbeat](#heartbeat).                                                                      |
+| Option              | Type     | Description                                                                                                                                           |
+|---------------------|----------|-------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `runLimit`          | `int`    | Stop after this number of iterations.                                                                                                                 |
+| `memoryLimit`       | `string` | Stop when memory usage exceeds this value, e.g. `128MB` or `128M`. Supported units: `B`, `K`/`KB`, `M`/`MB`, `G`/`GB` (case-insensitive, 1024-based). |
+| `timeLimit`         | `int`    | Stop after this number of seconds.                                                                                                                    |
+| `restartSignalFile` | `string` | Stop when this file is touched after the worker has started, see [restart after a deployment](#restart-after-a-deployment).                           |
+| `heartbeatFile`     | `string` | Touch this file on start and after every iteration, see [heartbeat](#heartbeat).                                                                      |
 
 Limits are checked after each iteration. When a limit is exceeded, the worker logs the reason and stops gracefully.
 
@@ -70,6 +71,31 @@ Without `ext-pcntl` this feature is not available.
 
 If you need to react to other signals, register the `StopWorkerOnSignalListener` with your own list of signals
 on a custom event dispatcher, see [events & listeners](events.md).
+
+## Restart after a deployment
+
+Long-running workers keep the code they were started with. To pick up a new release,
+set the `restartSignalFile` option and touch that file during the deployment.
+Every worker that was started before the file was touched stops after its current iteration,
+and the process manager starts it again with the new code:
+
+```php
+use Patchlevel\Worker\DefaultWorker;
+
+$worker = DefaultWorker::create(
+    $job,
+    ['restartSignalFile' => 'var/worker-restart'],
+    $logger,
+);
+```
+```bash
+touch var/worker-restart
+```
+:::note
+The file is checked after every iteration and only its modification time matters,
+so the file can stay in place and be touched again on the next deployment.
+All workers that should restart have to see the same file, e.g. on a shared volume.
+:::
 
 ## Sleep
 

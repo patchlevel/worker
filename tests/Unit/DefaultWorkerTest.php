@@ -12,6 +12,7 @@ use Patchlevel\Worker\Event\WorkerStoppedEvent;
 use Patchlevel\Worker\Listener\HeartbeatListener;
 use Patchlevel\Worker\Listener\StopWorkerOnIterationLimitListener;
 use Patchlevel\Worker\Listener\StopWorkerOnMemoryLimitListener;
+use Patchlevel\Worker\Listener\StopWorkerOnRestartSignalListener;
 use Patchlevel\Worker\Listener\StopWorkerOnSignalListener;
 use Patchlevel\Worker\Listener\StopWorkerOnTimeLimitListener;
 use Patchlevel\Worker\Tests\ReturnCallback;
@@ -147,12 +148,13 @@ final class DefaultWorkerTest extends TestCase
 
         $clock = new TestClock();
 
-        $invokationCount = $this->exactly(5);
+        $invokationCount = $this->exactly(6);
         $invokationParameters = [
             [new StopWorkerOnSignalListener(logger: $logger)],
             [new StopWorkerOnIterationLimitListener(10, $logger)],
             [new StopWorkerOnMemoryLimitListener(Bytes::parseFromString('10KB'), $logger)],
             [new StopWorkerOnTimeLimitListener(20, $logger, $clock)],
+            [new StopWorkerOnRestartSignalListener('var/worker-restart', $logger, $clock)],
             [new HeartbeatListener('/tmp/worker-heartbeat', $logger)],
         ];
 
@@ -172,6 +174,7 @@ final class DefaultWorkerTest extends TestCase
                 'runLimit' => 10,
                 'memoryLimit' => '10KB',
                 'timeLimit' => 20,
+                'restartSignalFile' => 'var/worker-restart',
                 'heartbeatFile' => '/tmp/worker-heartbeat',
             ],
             $logger,

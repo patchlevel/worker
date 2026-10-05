@@ -11,6 +11,7 @@ use Patchlevel\Worker\Event\WorkerStoppedEvent;
 use Patchlevel\Worker\Listener\HeartbeatListener;
 use Patchlevel\Worker\Listener\StopWorkerOnIterationLimitListener;
 use Patchlevel\Worker\Listener\StopWorkerOnMemoryLimitListener;
+use Patchlevel\Worker\Listener\StopWorkerOnRestartSignalListener;
 use Patchlevel\Worker\Listener\StopWorkerOnSignalListener;
 use Patchlevel\Worker\Listener\StopWorkerOnTimeLimitListener;
 use Psr\Clock\ClockInterface;
@@ -100,8 +101,8 @@ final class DefaultWorker implements Worker
     }
 
     /**
-     * @param Closure(Closure):(bool|void)                                                                                                       $job
-     * @param array{runLimit?: (positive-int|null), memoryLimit?: (string|null), timeLimit?: (positive-int|null), heartbeatFile?: (string|null)} $options
+     * @param Closure(Closure):(bool|void)                                                                                                                                          $job
+     * @param array{runLimit?: (positive-int|null), memoryLimit?: (string|null), timeLimit?: (positive-int|null), restartSignalFile?: (string|null), heartbeatFile?: (string|null)} $options
      */
     public static function create(
         Closure $job,
@@ -131,6 +132,12 @@ final class DefaultWorker implements Worker
         if (isset($options['timeLimit'])) {
             $eventDispatcher->addSubscriber(
                 new StopWorkerOnTimeLimitListener($options['timeLimit'], $logger, $clock),
+            );
+        }
+
+        if (isset($options['restartSignalFile'])) {
+            $eventDispatcher->addSubscriber(
+                new StopWorkerOnRestartSignalListener($options['restartSignalFile'], $logger, $clock),
             );
         }
 
