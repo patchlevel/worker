@@ -137,7 +137,7 @@ final class DefaultWorker implements Worker
 
         if (isset($options['restartSignalFile'])) {
             $eventDispatcher->addSubscriber(
-                new StopWorkerOnRestartSignalListener($options['restartSignalFile'], $logger),
+                new StopWorkerOnRestartSignalListener($options['restartSignalFile'], $logger, $clock),
             );
         }
 

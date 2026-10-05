@@ -6,28 +6,33 @@ namespace Patchlevel\Worker\Listener;
 
 use Patchlevel\Worker\Event\WorkerRunningEvent;
 use Patchlevel\Worker\Event\WorkerStartedEvent;
+use Patchlevel\Worker\SystemClock;
+use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 use function clearstatcache;
 use function filemtime;
 use function is_file;
-use function time;
 
 final class StopWorkerOnRestartSignalListener implements EventSubscriberInterface
 {
     private int $startTime = 0;
 
+    private readonly ClockInterface $clock;
+
     /** @param string $file the worker stops if this file is touched after the worker has started */
     public function __construct(
         private readonly string $file,
         private readonly LoggerInterface|null $logger = null,
+        ClockInterface|null $clock = null,
     ) {
+        $this->clock = $clock ?? new SystemClock();
     }
 
     public function onWorkerStarted(): void
     {
-        $this->startTime = time();
+        $this->startTime = $this->clock->now()->getTimestamp();
     }
 
     public function onWorkerRunning(WorkerRunningEvent $event): void

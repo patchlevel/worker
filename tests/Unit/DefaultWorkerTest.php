@@ -154,7 +154,7 @@ final class DefaultWorkerTest extends TestCase
             [new StopWorkerOnIterationLimitListener(10, $logger)],
             [new StopWorkerOnMemoryLimitListener(Bytes::parseFromString('10KB'), $logger)],
             [new StopWorkerOnTimeLimitListener(20, $logger, $clock)],
-            [new StopWorkerOnRestartSignalListener('var/worker-restart', $logger)],
+            [new StopWorkerOnRestartSignalListener('var/worker-restart', $logger, $clock)],
             [new HeartbeatListener('/tmp/worker-heartbeat', $logger)],
         ];
 
